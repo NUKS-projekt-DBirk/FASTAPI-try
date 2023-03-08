@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 import shemas
 from sqlalchemy.orm import Session
@@ -31,19 +31,50 @@ def create_todo(todo: shemas.ToDoTask):
 
 @app.get("/get/{id}")
 def read_todo(id: int):
-    return "Read todo item with id {id}"
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb = session.query(ToDO).filter_by(id=id).first()
+    session.close()
+    
+    if not tododb:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    return tododb.task
 
 
 @app.put("/change/{id}")
-def change_todo(id: int):
-    return "Change todo item with id {id}"
+def change_todo(id: int, new_task: str):
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb = session.query(ToDO).filter_by(id=id).first()
+    
+    if not tododb:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    tododb.task = new_task
+    session.commit()
+    session.close()
+    
+    return f"Changed task of todo item with id {id} to '{new_task}'"
 
 @app.delete("/delete/{id}")
 def delete_todo(id: int):
-    return "Delete todo item with id {id}"
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb = session.query(ToDO).filter_by(id=id).first()
+    
+    if not tododb:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    session.delete(tododb)
+    session.commit()
+    session.close()
+    
+    return f"Deleted todo item with id {id}"
 
-@app.get("list")
-def read_todo_list(id: int):
-    return "All todos"
+@app.get("/list")
+def read_todo_list():
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb_list = session.query(ToDO).all()
+    session.close()
+    
+    return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
 
 
