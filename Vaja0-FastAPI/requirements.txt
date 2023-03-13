@@ -1,2 +1,4 @@
 fastapi[all]==0.92.0
 sqlalchemy==2.0.4
+fastapi_versioning==0.10.0
+sendgrid==6.9.7
