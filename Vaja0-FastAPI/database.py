@@ -11,4 +11,4 @@ class ToDO(Base):   #dva columna
     task = Column(String(50))
 
 
-#al rajs tko da ti shran sliko v todo ze?
+
