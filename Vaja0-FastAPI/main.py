@@ -1,17 +1,20 @@
-from fastapi import FastAPI, HTTPException, status
-from fastapi_versioning import version, VersionedFastAPI
-##
-
 ##
 import shemas
+from database import Base, ToDO, engine
+from fastapi import FastAPI, HTTPException, status
+from fastapi_versioning import VersionedFastAPI, version
 from sqlalchemy.orm import Session
-
-from database import Base, engine, ToDO
+##
+import os
+import smtplib
+from email.message import EmailMessage
+from dotenv import load_dotenv
 
 Base.metadata.create_all(engine)
 
 app = FastAPI()  #app instance
 
+#___________________________________________________________
 
 
 @app.get("/")
@@ -23,9 +26,9 @@ def read_root():
 #_______________________________________________________
 @app.post("/add", status_code=status.HTTP_201_CREATED)
 @version(2)
-def create_todo(todo: shemas.ToDoTask):
+def create_todo(todo: shemas.ToDoTask): 
     session = Session(bind = engine, expire_on_commit=False)
-    tododb = ToDO(task= todo.task)
+    tododb = ToDO(task= todo.task, is_deleted=False) 
     
     session.add(tododb)
     session.commit()
@@ -44,7 +47,7 @@ def read_todo(id: int):
 @version(2)
 def read_todo(id: int):
     session = Session(bind=engine, expire_on_commit=False)
-    tododb = session.query(ToDO).filter_by(id=id).first()
+    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
     session.close()
     
     if not tododb:
@@ -56,7 +59,7 @@ def read_todo(id: int):
 @version(2)
 def change_todo(id: int, new_task: str):
     session = Session(bind=engine, expire_on_commit=False)
-    tododb = session.query(ToDO).filter_by(id=id).first()
+    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
     
     if not tododb:
         raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
@@ -71,12 +74,12 @@ def change_todo(id: int, new_task: str):
 @version(2)
 def delete_todo(id: int):
     session = Session(bind=engine, expire_on_commit=False)
-    tododb = session.query(ToDO).filter_by(id=id).first()
+    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
     
     if not tododb:
         raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
     
-    session.delete(tododb)
+    tododb.is_deleted = True
     session.commit()
     session.close()
     
@@ -86,16 +89,21 @@ def delete_todo(id: int):
 @version(2)
 def read_todo_list():
     session = Session(bind=engine, expire_on_commit=False)
-    tododb_list = session.query(ToDO).all()
-    session.close()
+    tododb_list = session.query(ToDO).filter_by(is_deleted=False).all()
+    session.close() 
     
     return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
+
 #_______________________________________________________
+@app.get("/list-deleted")
+@version(2)
+def read_deleted_todo_list():
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb_list = session.query(ToDO).filter_by(is_deleted=True).all()
+    session.close() 
+    
+    return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
 ###########################################################
-import smtplib
-from email.message import EmailMessage
-from dotenv import load_dotenv
-import os
 
 load_dotenv()  
 
@@ -103,7 +111,7 @@ load_dotenv()
 @version(2)
 def send_email(to_email: str):
     session = Session(bind=engine, expire_on_commit=False)
-    tododb_list = session.query(ToDO).all()
+    tododb_list = session.query(ToDO).filter_by(is_deleted=False).all()
     session.close()
     todos = [{"id": todo.id, "task": todo.task} for todo in tododb_list]
     todos_text = "\n".join([f"{todo['id']}: {todo['task']}" for todo in todos])
@@ -124,7 +132,7 @@ def send_email(to_email: str):
             return f"TODO list sent to {to_email}"
     except Exception as e:
         print(e.message)
-        return "Failed to send email"
+        return "Failed to send email" 
     
 ############################################################
 app = VersionedFastAPI(app, version_format="{major}", prefix_format="/v{major}")
