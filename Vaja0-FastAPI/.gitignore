@@ -3,3 +3,7 @@ __pycache__
 get-pip.py 
 .env
 Pipfile
+npm-debug.log
+package-lock.json
+package.json
+node_modules

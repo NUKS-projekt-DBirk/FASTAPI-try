@@ -1,22 +1,36 @@
 ##
 import shemas
 from database import Base, ToDO, engine
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Response
 from fastapi_versioning import VersionedFastAPI, version
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
+
 ##
 import os
 import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
 
-Base.metadata.create_all(engine)
+from fastapi.middleware.cors import CORSMiddleware
 
+
+Base.metadata.create_all(engine)
 app = FastAPI()  #app instance
 
+
+#origins = ["*"]
+origins = ["http://localhost", "http://localhost:3000", "http://localhost:8000", "localhost:3000"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 #___________________________________________________________
-
-
 @app.get("/")
 def read_root():
     """
@@ -24,6 +38,21 @@ def read_root():
     """
     return "TODO app"
 #_______________________________________________________
+
+@app.get("/list")
+@version(2)
+@app.get("/list")
+def read_todo_list(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  #dodano za CORS
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb_list = session.query(ToDO).filter_by(is_deleted=False).all()
+    session.close()
+    return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
+#_______________________________________________________
+###############################################################################################################
+
+
+
 @app.post("/add", status_code=status.HTTP_201_CREATED)
 @version(2)
 def create_todo(todo: shemas.ToDoTask): 
@@ -36,7 +65,17 @@ def create_todo(todo: shemas.ToDoTask):
     session.close()
 
     return f"Created new todo with id: {id}"
+
+
+
+
+
+
+
+
+
 #_______________________________________________________
+
 @app.get("/get/{id}")
 @version(1)
 def read_todo(id: int):
@@ -85,14 +124,8 @@ def delete_todo(id: int):
     
     return f"Deleted todo item with id {id}"
 #_______________________________________________________
-@app.get("/list")
-@version(2)
-def read_todo_list():
-    session = Session(bind=engine, expire_on_commit=False)
-    tododb_list = session.query(ToDO).filter_by(is_deleted=False).all()
-    session.close() 
-    
-    return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
+
+
 
 #_______________________________________________________
 @app.get("/list-deleted")
