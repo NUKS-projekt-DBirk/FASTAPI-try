@@ -19,7 +19,8 @@ app = FastAPI()  #app instance
 
 
 #origins = ["*"]
-origins = ["http://localhost", "http://localhost:3000", "http://localhost:8000", "localhost:3000"]
+origins = ["http://localhost", "http://localhost:3000", "http://localhost:3000",  "http://localhost:8000", "localhost:3000"]
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -49,13 +50,19 @@ def read_todo_list(response: Response):
     session.close()
     return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
 #_______________________________________________________
-###############################################################################################################
 
-
+@app.options("/add")
+@version(2)
+def add_todo_options(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
 
 @app.post("/add", status_code=status.HTTP_201_CREATED)
 @version(2)
-def create_todo(todo: shemas.ToDoTask): 
+def create_todo(todo: shemas.ToDoTask, response: Response): 
+    response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
+
     session = Session(bind = engine, expire_on_commit=False)
     tododb = ToDO(task= todo.task, is_deleted=False) 
     
@@ -65,15 +72,68 @@ def create_todo(todo: shemas.ToDoTask):
     session.close()
 
     return f"Created new todo with id: {id}"
+#_______________________________________________________
+
+@app.options("/delete/{id}")
+@version(2)
+def delete_todo_options(id: int, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    
+@app.delete("/delete/{id}")
+@version(2)
+def delete_todo(id: int, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
+
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
+    
+    if not tododb:
+        raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
+    
+    tododb.is_deleted = True
+    session.commit()
+    session.close()
+    
+    return f"Deleted todo item with id {id}"
+#_______________________________________________________
 
 
 
 
 
 
+###############################################################################################################
+
+@app.options("/change/{id}")
+@version(2)
+def change_todo_options(id: int, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "PUT, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+
+@app.put("/change/{id}")
+@version(2)
+def change_todo(id: int, new_task: str, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
+
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
+    
+    if not tododb:
+        raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
+    
+    tododb.task = new_task
+    session.commit()
+    session.close()
+    
+    return f"Changed task of todo item with id {id} to '{new_task}'"
 
 
 
+
+#_______________________________________________________
 #_______________________________________________________
 
 @app.get("/get/{id}")
@@ -93,37 +153,6 @@ def read_todo(id: int):
         raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
     
     return tododb.task
-#_______________________________________________________
-@app.put("/change/{id}")
-@version(2)
-def change_todo(id: int, new_task: str):
-    session = Session(bind=engine, expire_on_commit=False)
-    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
-    
-    if not tododb:
-        raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
-    
-    tododb.task = new_task
-    session.commit()
-    session.close()
-    
-    return f"Changed task of todo item with id {id} to '{new_task}'"
-#_______________________________________________________
-@app.delete("/delete/{id}")
-@version(2)
-def delete_todo(id: int):
-    session = Session(bind=engine, expire_on_commit=False)
-    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
-    
-    if not tododb:
-        raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
-    
-    tododb.is_deleted = True
-    session.commit()
-    session.close()
-    
-    return f"Deleted todo item with id {id}"
-#_______________________________________________________
 
 
 
