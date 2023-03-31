@@ -125,10 +125,29 @@ def change_todo(id: int, new_task: str, response: Response):
     return f"Changed task of todo item with id {id} to '{new_task}'"
 #_______________________________________________________
 
+@app.options("/list-deleted")
+@version(2)
+def read_deleted_todo_list_options(id: int, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+
+
+@app.get("/list-deleted")
+@version(2)
+def read_deleted_todo_list(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb_list = session.query(ToDO).filter_by(is_deleted=True).all()
+    session.close() 
+    
+    return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
+#_______________________________________________________
+
+###############################################################################################################
 
 
 #_______________________________________________________
-###############################################################################################################
 
 @app.get("/get/{id}")
 @version(1)
@@ -151,21 +170,23 @@ def read_todo(id: int):
 
 
 #_______________________________________________________
-@app.get("/list-deleted")
-@version(2)
-def read_deleted_todo_list():
-    session = Session(bind=engine, expire_on_commit=False)
-    tododb_list = session.query(ToDO).filter_by(is_deleted=True).all()
-    session.close() 
-    
-    return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
+
 ###########################################################
 
 load_dotenv()  
 
+@app.options("/send-email")
+@version(2)
+def send_email_options(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+
 @app.post("/send-email")
 @version(2)
-def send_email(to_email: str):
+def send_email(to_email: str, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
+
     session = Session(bind=engine, expire_on_commit=False)
     tododb_list = session.query(ToDO).filter_by(is_deleted=False).all()
     session.close()

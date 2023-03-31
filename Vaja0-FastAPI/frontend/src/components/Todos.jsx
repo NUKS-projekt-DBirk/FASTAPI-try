@@ -27,6 +27,7 @@ const TodosContext = React.createContext({
 
 export default function Todos() {
   const [todos, setTodos] = useState([]);
+  const [deletedTodos, setDeletedTodos] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [newTodo, setNewTodo] = useState("");
   const [editTodo, setEditTodo] = useState(null);
@@ -36,6 +37,12 @@ export default function Todos() {
     const response = await fetch("http://localhost:8000/v2/list");
     const data = await response.json();
     setTodos(data.reverse()); // update todos with the data in reverse order
+  };
+
+  const fetchDeletedTodos = async () => {
+    const response = await fetch("http://localhost:8000/v2/list-deleted");
+    const data = await response.json();
+    setDeletedTodos(data.reverse()); // update deletedTodos with the data in reverse order
   };
 
   const addTodo = async () => {
@@ -57,6 +64,7 @@ export default function Todos() {
       method: "DELETE",
     });
     fetchTodos();
+    fetchDeletedTodos();
   };
 
   const editTodoFunc = async (id, newTask) => {
@@ -67,14 +75,33 @@ export default function Todos() {
     setEditTodo(null);
     fetchTodos();
   };
-  
+
+  const sendEmail = async () => {
+    const email = prompt("Enter your email address:");
+    if (email) {
+      await fetch(`http://localhost:8000/v2/send-email?to_email=${encodeURIComponent(email)}`, {
+        method: "POST",
+      });
+      alert(`TODO list sent to ${email}`);
+    }
+  };
 
   useEffect(() => {
     fetchTodos();
+    fetchDeletedTodos();
   }, []);
 
   return (
-    <TodosContext.Provider value={{ todos, fetchTodos, addTodo, deleteTodo, editTodo: editTodoFunc }}>
+    <TodosContext.Provider
+      value={{
+        todos,
+        deletedTodos,
+        fetchTodos,
+        addTodo,
+        deleteTodo,
+        editTodo: editTodoFunc,
+      }}
+    >
       <Flex direction="column" align="center">
         <Text fontSize="2xl" fontWeight="bold" mb={4}>
           Todos app made by David Birk
@@ -85,78 +112,86 @@ export default function Todos() {
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
           />
-          <Button colorScheme="blue" ml={2} onClick={addTodo}>
-            Add
+          <Button onClick={addTodo} colorScheme="blue" ml={2}>
+            Add Todo
           </Button>
         </InputGroup>
-        <Stack spacing={5} maxW="md">
-          {todos &&
-            todos.map((todo) => (
-              <Box key={todo.id}>
+        <Stack spacing={4} maxW="md">
+          {todos.map((todo) => (
+            <Box
+              key={todo.id}
+              bg="gray.100"
+              p={4}
+              borderRadius="md"
+              boxShadow="md"
+            >
+              <Flex justifyContent="space-between" alignItems="center">
                 {editTodo === todo.id ? (
-                  <InputGroup>
+                  <>
                     <Input
-                      placeholder="Edit task"
                       value={editTodoText}
                       onChange={(e) => setEditTodoText(e.target.value)}
                     />
                     <Button
-                      colorScheme="green"
-                      size="sm"
                       onClick={() => editTodoFunc(todo.id, editTodoText)}
+                      colorScheme="green"
                       ml={2}
                     >
                       Save
                     </Button>
-                    <Button
-                      colorScheme="gray"
-                      size="sm"
-                      onClick={() => {
-                        setEditTodoText("");
-                        setEditTodo(null);
-                        fetchTodos();
-                      }}
-                      
-                    
-                    ml={2}
-                    >
-                    Cancel
-                    </Button>
-                    </InputGroup>
-                    ) : (
-                    <Flex justify="space-between" align="center">
-                    <Text>{todo.task}</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text textDecoration={todo.completed ? "line-through" : ""}>
+                      {todo.task}
+                    </Text>
                     <Flex>
-                    <Button size="sm" onClick={() => setEditTodoText(todo.task) || setEditTodo(todo.id)}>
-                    Edit
-                    </Button>
-                    <Button colorScheme="red" size="sm" onClick={() => deleteTodo(todo.id)} ml={2}>
-                    Delete
-                    </Button>
+                      <Button
+                        onClick={() => {
+                          setEditTodoText(todo.task);
+                          setEditTodo(todo.id);
+                        }}
+                        colorScheme="yellow"
+                        mr={2}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => deleteTodo(todo.id)}
+                        colorScheme="red"
+                      >
+                        Delete
+                      </Button>
                     </Flex>
-                    </Flex>
-                    )}
-                    </Box>
-                    ))}
-                    </Stack>
-                    <Modal isOpen={isOpen} onClose={onClose}>
-                    <ModalOverlay />
-                    <ModalContent>
-                    <ModalHeader>Confirm delete</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>Are you sure you want to delete this todo?</ModalBody>
-                    <ModalFooter>
-                    <Button colorScheme="red" onClick={deleteTodo} mr={3}>
-                    Delete
-                    </Button>
-                    <Button variant="ghost" onClick={onClose}>
-                    Cancel
-                    </Button>
-                    </ModalFooter>
-                    </ModalContent>
-                    </Modal>
-                    </Flex>
-                    </TodosContext.Provider>
-                    );
-                    }                    
-
+                  </>
+                )}
+              </Flex>
+            </Box>
+          ))}
+        </Stack>
+        <Button onClick={sendEmail} colorScheme="green" mt={4}>
+          Email My Todo List
+        </Button>
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Deleted Todos</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack spacing={2}>
+                {deletedTodos.map((todo) => (
+                  <Text key={todo.id}>{todo.task}</Text>
+                ))}
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button onClick={onClose}>Close</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+        <Button onClick={onOpen} colorScheme="orange" mt={4}>
+          View Deleted Todos
+        </Button>
+      </Flex>
+    </TodosContext.Provider>
+  );}
