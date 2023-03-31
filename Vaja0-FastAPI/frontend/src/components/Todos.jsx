@@ -22,12 +22,15 @@ const TodosContext = React.createContext({
   fetchTodos: () => {},
   addTodo: () => {},
   deleteTodo: () => {},
+  editTodo: () => {},
 });
 
 export default function Todos() {
   const [todos, setTodos] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [newTodo, setNewTodo] = useState("");
+  const [editTodo, setEditTodo] = useState(null);
+  const [editTodoText, setEditTodoText] = useState("");
 
   const fetchTodos = async () => {
     const response = await fetch("http://localhost:8000/v2/list");
@@ -56,12 +59,22 @@ export default function Todos() {
     fetchTodos();
   };
 
+  const editTodoFunc = async (id, newTask) => {
+    await fetch(`http://localhost:8000/v2/change/${id}?new_task=${encodeURIComponent(newTask)}`, {
+      method: "PUT",
+    });
+    setEditTodoText("");
+    setEditTodo(null);
+    fetchTodos();
+  };
+  
+
   useEffect(() => {
     fetchTodos();
   }, []);
 
   return (
-    <TodosContext.Provider value={{ todos, fetchTodos, addTodo, deleteTodo }}>
+    <TodosContext.Provider value={{ todos, fetchTodos, addTodo, deleteTodo, editTodo: editTodoFunc }}>
       <Flex direction="column" align="center">
         <Text fontSize="2xl" fontWeight="bold" mb={4}>
           Todos app made by David Birk
@@ -80,19 +93,70 @@ export default function Todos() {
           {todos &&
             todos.map((todo) => (
               <Box key={todo.id}>
-                <b>{todo.task}</b>
-                <Button
-                  colorScheme="red"
-                  size="sm"
-                  onClick={() => deleteTodo(todo.id)}
-                  ml={2}
-                >
-                  Delete
-                </Button>
-              </Box>
-            ))}
-        </Stack>
-      </Flex>
-    </TodosContext.Provider>
-  );
-}
+                {editTodo === todo.id ? (
+                  <InputGroup>
+                    <Input
+                      placeholder="Edit task"
+                      value={editTodoText}
+                      onChange={(e) => setEditTodoText(e.target.value)}
+                    />
+                    <Button
+                      colorScheme="green"
+                      size="sm"
+                      onClick={() => editTodoFunc(todo.id, editTodoText)}
+                      ml={2}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      colorScheme="gray"
+                      size="sm"
+                      onClick={() => {
+                        setEditTodoText("");
+                        setEditTodo(null);
+                        fetchTodos();
+                      }}
+                      
+                    
+                    ml={2}
+                    >
+                    Cancel
+                    </Button>
+                    </InputGroup>
+                    ) : (
+                    <Flex justify="space-between" align="center">
+                    <Text>{todo.task}</Text>
+                    <Flex>
+                    <Button size="sm" onClick={() => setEditTodoText(todo.task) || setEditTodo(todo.id)}>
+                    Edit
+                    </Button>
+                    <Button colorScheme="red" size="sm" onClick={() => deleteTodo(todo.id)} ml={2}>
+                    Delete
+                    </Button>
+                    </Flex>
+                    </Flex>
+                    )}
+                    </Box>
+                    ))}
+                    </Stack>
+                    <Modal isOpen={isOpen} onClose={onClose}>
+                    <ModalOverlay />
+                    <ModalContent>
+                    <ModalHeader>Confirm delete</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>Are you sure you want to delete this todo?</ModalBody>
+                    <ModalFooter>
+                    <Button colorScheme="red" onClick={deleteTodo} mr={3}>
+                    Delete
+                    </Button>
+                    <Button variant="ghost" onClick={onClose}>
+                    Cancel
+                    </Button>
+                    </ModalFooter>
+                    </ModalContent>
+                    </Modal>
+                    </Flex>
+                    </TodosContext.Provider>
+                    );
+                    }                    
+

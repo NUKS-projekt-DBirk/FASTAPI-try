@@ -99,19 +99,13 @@ def delete_todo(id: int, response: Response):
     return f"Deleted todo item with id {id}"
 #_______________________________________________________
 
-
-
-
-
-
-###############################################################################################################
-
 @app.options("/change/{id}")
 @version(2)
 def change_todo_options(id: int, response: Response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "PUT, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+
 
 @app.put("/change/{id}")
 @version(2)
@@ -120,21 +114,21 @@ def change_todo(id: int, new_task: str, response: Response):
 
     session = Session(bind=engine, expire_on_commit=False)
     tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
-    
+
     if not tododb:
         raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
-    
+
     tododb.task = new_task
     session.commit()
     session.close()
-    
+
     return f"Changed task of todo item with id {id} to '{new_task}'"
-
+#_______________________________________________________
 
 
 
 #_______________________________________________________
-#_______________________________________________________
+###############################################################################################################
 
 @app.get("/get/{id}")
 @version(1)
