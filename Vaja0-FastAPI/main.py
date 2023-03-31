@@ -12,10 +12,12 @@ from email.message import EmailMessage
 from dotenv import load_dotenv
 
 from fastapi.middleware.cors import CORSMiddleware
-
+from datetime import datetime
+from pytz import timezone
 
 Base.metadata.create_all(engine)
 app = FastAPI()  #app instance
+local_tz = timezone('Europe/Belgrade')
 
 
 #origins = ["*"]
@@ -40,7 +42,7 @@ def read_root():
     return "TODO app"
 #_______________________________________________________
 
-@app.get("/list")
+
 @version(2)
 @app.get("/list")
 def read_todo_list(response: Response):
@@ -48,7 +50,8 @@ def read_todo_list(response: Response):
     session = Session(bind=engine, expire_on_commit=False)
     tododb_list = session.query(ToDO).filter_by(is_deleted=False).all()
     session.close()
-    return [{"id": todo.id, "task": todo.task} for todo in tododb_list]
+    return [{"id": todo.id, "task": todo.task, "created_at": todo.created_at.strftime('%Y-%m-%d %H:%M:%S') if todo.created_at else None} for todo in tododb_list]
+
 #_______________________________________________________
 
 @app.options("/add")
@@ -64,14 +67,17 @@ def create_todo(todo: shemas.ToDoTask, response: Response):
     response.headers["Access-Control-Allow-Origin"] = "*"  # allow all origins
 
     session = Session(bind = engine, expire_on_commit=False)
-    tododb = ToDO(task= todo.task, is_deleted=False) 
+    created_at = datetime.now(local_tz)
+    tododb = ToDO(task=todo.task, is_deleted=False, created_at=created_at) 
     
     session.add(tododb)
     session.commit()
     id = tododb.id
+    created_at = tododb.created_at.strftime('%Y-%m-%d %H:%M:%S') # Convert datetime to string format
+    
     session.close()
 
-    return f"Created new todo with id: {id}"
+    return f"Created new todo with id: {id} and created at: {created_at}"
 #_______________________________________________________
 
 @app.options("/delete/{id}")
@@ -145,30 +151,6 @@ def read_deleted_todo_list(response: Response):
 #_______________________________________________________
 
 ###############################################################################################################
-
-
-#_______________________________________________________
-
-@app.get("/get/{id}")
-@version(1)
-def read_todo(id: int):
-    return "read TODO"
-
-############################## v2 Get APIja##
-@app.get("/get/{id}")
-@version(2)
-def read_todo(id: int):
-    session = Session(bind=engine, expire_on_commit=False)
-    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
-    session.close()
-    
-    if not tododb:
-        raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
-    
-    return tododb.task
-
-
-
 #_______________________________________________________
 
 ###########################################################
@@ -190,8 +172,8 @@ def send_email(to_email: str, response: Response):
     session = Session(bind=engine, expire_on_commit=False)
     tododb_list = session.query(ToDO).filter_by(is_deleted=False).all()
     session.close()
-    todos = [{"id": todo.id, "task": todo.task} for todo in tododb_list]
-    todos_text = "\n".join([f"{todo['id']}: {todo['task']}" for todo in todos])
+    todos = [{"id": todo.id, "task": todo.task, "created_at": todo.created_at.strftime('%Y-%m-%d %H:%M:%S')} for todo in tododb_list]
+    todos_text = "\n".join([f"{todo['id']}: {todo['task']} ({todo['created_at']})" for todo in todos])
     
     msg = EmailMessage()
     msg.set_content(todos_text)
@@ -213,3 +195,25 @@ def send_email(to_email: str, response: Response):
     
 ############################################################
 app = VersionedFastAPI(app, version_format="{major}", prefix_format="/v{major}")
+
+
+
+
+"""
+@app.get("/get/{id}")
+@version(1)
+def read_todo(id: int):
+    return "read TODO"
+
+@app.get("/get/{id}")
+@version(2)
+def read_todo(id: int):
+    session = Session(bind=engine, expire_on_commit=False)
+    tododb = session.query(ToDO).filter_by(id=id, is_deleted=False).first()
+    session.close()
+    
+    if not tododb:
+        raise HTTPException(status_code=404, detail=f"Todo with id {id} not found")
+    
+    return tododb.task
+"""
