@@ -21,11 +21,11 @@ Access the API endpoints using an HTTP client like curl, Postman or a web browse
 
 API endpoints for the TODO app:
 ================================
-GET /: Default API call
-GET /get/{id}: Get a TODO item by ID
-GET /list: Get the list of non-deleted TODO items
-POST /add: Create a new TODO item
-DELETE /delete/{id}: Delete a TODO item by ID
-PUT /change/{id}: Update the task of a TODO item by ID
-GET /list-deleted: Get the list of deleted TODO items
-POST /send-email: Send an email with the list of TODO items
+- GET /: Default API call
+- GET /get/{id}: Get a TODO item by ID
+- GET /list: Get the list of non-deleted TODO items
+- POST /add: Create a new TODO item
+- DELETE /delete/{id}: Delete a TODO item by ID
+- PUT /change/{id}: Update the task of a TODO item by ID
+- GET /list-deleted: Get the list of deleted TODO items
+- POST /send-email: Send an email with the list of TODO items
