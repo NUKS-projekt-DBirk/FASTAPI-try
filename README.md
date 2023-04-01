@@ -1,27 +1,14 @@
 ToDo List App
-This is a simple ToDo List App for personal use. The application is built using FastAPI for the backend, SQLite for the database, and React for the frontend.
+===================
+This is a simple Todo List Task App built using a combination of backend and frontend technologies. The purpose of this app is to allow users to create, edit, and delete tasks in order to better manage their daily tasks and stay organized.
 
-Features
-Add tasks to your ToDo list
-Edit tasks
-Mark tasks as completed
-Delete tasks
-Requirements
-Python 3.8 or higher
-Node.js 14 or higher
-SQLite 3 or higher
-Installation
-Clone the repository: git clone https://github.com/yourusername/todo-list-app.git
-Install the backend dependencies: cd todo-list-app/backend && pip install -r requirements.txt
-Create the SQLite database: cd .. && touch todo.db
-Start the backend server: cd backend && uvicorn main:app --reload
-Install the frontend dependencies: cd ../frontend && npm install
-Start the frontend server: npm start
-Usage
-Once you have the backend and frontend servers running, you can access the app by visiting http://localhost:3000 in your web browser.
+The app is currently in development and is not yet ready for public use. The backend code is located in the backend folder, and the frontend code is located in the frontend folder.
 
-Contributing
-Contributions to this project are welcome! Please fork the repository and create a pull request with your changes.
+Backend Code:
+The backend code for this app is built using Python and FastAPI framework. It is responsible for handling all server-side logic and database interactions. The app uses a SQLLite database to store task data. 
 
-License
-This project is licensed under the MIT License. See the LICENSE file for details.
+Frontend Code:
+The frontend code for this app is built using React.js. It is responsible for handling all client-side interactions and rendering the UI. 
+
+Please note that this app is still in development and is not yet ready for public use. There may be bugs and other issues that need to be resolved before it can be released. If you encounter any problems while using the app, please report them to the developers so they can be addressed.
+
