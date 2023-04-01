@@ -16,6 +16,7 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
+import moment from "moment";
 
 const TodosContext = React.createContext({
   todos: [],
@@ -90,7 +91,6 @@ export default function Todos() {
     fetchTodos();
     fetchDeletedTodos();
   }, []);
-
   return (
     <TodosContext.Provider
       value={{
@@ -104,16 +104,16 @@ export default function Todos() {
     >
       <Flex direction="column" align="center">
         <Text fontSize="2xl" fontWeight="bold" mb={4}>
-          Todos app made by David Birk
+          To-Do app made by David Birk
         </Text>
         <InputGroup mb={4} maxW="md">
           <Input
-            placeholder="Enter new todo task"
+            placeholder="Enter new ToDo task"
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
           />
           <Button onClick={addTodo} colorScheme="blue" ml={2}>
-            Add Todo
+            Add ToDo
           </Button>
         </InputGroup>
         <Stack spacing={4} maxW="md">
@@ -126,61 +126,60 @@ export default function Todos() {
               boxShadow="md"
             >
               <Flex justifyContent="space-between" alignItems="center">
-                {editTodo === todo.id ? (
-                  <>
-                    <Input
-                      value={editTodoText}
-                      onChange={(e) => setEditTodoText(e.target.value)}
-                    />
+                <Text textDecoration={todo.completed ? "line-through" : ""}>
+                  {todo.task}
+                </Text>
+                <Flex alignItems="center">
+                  <Text fontSize="sm" mr={2}>Created: {moment(todo.created_at).format("MMM DD, YYYY")}</Text>
+                  <Flex>
                     <Button
-                      onClick={() => editTodoFunc(todo.id, editTodoText)}
-                      colorScheme="green"
-                      ml={2}
+                      onClick={() => {
+                        setEditTodoText(todo.task);
+                        setEditTodo(todo.id);
+                      }}
+                      colorScheme="yellow"
+                      mr={2}
                     >
-                      Save
+                      Edit
                     </Button>
-                  </>
-                ) : (
-                  <>
-                    <Text textDecoration={todo.completed ? "line-through" : ""}>
-                      {todo.task}
-                    </Text>
-                    <Flex>
-                      <Button
-                        onClick={() => {
-                          setEditTodoText(todo.task);
-                          setEditTodo(todo.id);
-                        }}
-                        colorScheme="yellow"
-                        mr={2}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => deleteTodo(todo.id)}
-                        colorScheme="red"
-                      >
-                        Delete
-                      </Button>
-                    </Flex>
-                  </>
-                )}
+                    <Button
+                      onClick={() => deleteTodo(todo.id)}
+                      colorScheme="green"
+                    >
+                      Done ✔
+                    </Button>
+                  </Flex>
+                </Flex>
               </Flex>
             </Box>
           ))}
         </Stack>
-        <Button onClick={sendEmail} colorScheme="green" mt={4}>
-          Email My Todo List
+        <Button onClick={sendEmail} colorScheme="blue" mt={4}>
+          Email My ToDo List
+        </Button>
+        <Button onClick={onOpen} colorScheme="orange" mt={4}>
+          View Done ToDos
         </Button>
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>Deleted Todos</ModalHeader>
+            <ModalHeader>Done ToDos</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <Stack spacing={2}>
                 {deletedTodos.map((todo) => (
-                  <Text key={todo.id}>{todo.task}</Text>
+                  <Box
+                    key={todo.id}
+                    bg="gray.100"
+                    p={4}
+                    borderRadius="md"
+                    boxShadow="md"
+                  >
+                    <Flex justifyContent="space-between" alignItems="center">
+                      <Text textDecoration="line-through">{todo.task}</Text>
+                      <Text fontSize="sm">Deleted: {moment(todo.deleted_at).format("MMM DD, YYYY")}</Text>
+                    </Flex>
+                  </Box>
                 ))}
               </Stack>
             </ModalBody>
@@ -189,9 +188,20 @@ export default function Todos() {
             </ModalFooter>
           </ModalContent>
         </Modal>
-        <Button onClick={onOpen} colorScheme="orange" mt={4}>
-          View Deleted Todos
-        </Button>
+        {editTodo && (
+          <Box mt={4}>
+            <InputGroup maxW="md">
+              <Input
+                placeholder="Enter new ToDo task"
+                value={editTodoText}
+                onChange={(e) => setEditTodoText(e.target.value)}
+              />
+              <Button onClick={() => editTodoFunc(editTodo, editTodoText)} colorScheme="blue" ml={2}>
+                Save
+              </Button>
+            </InputGroup>
+          </Box>
+        )}
       </Flex>
     </TodosContext.Provider>
   );}
