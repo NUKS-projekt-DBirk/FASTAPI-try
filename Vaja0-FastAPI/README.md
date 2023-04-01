@@ -4,20 +4,20 @@ This is the backend code for a TODO application. It is written in Python, using 
 
 Installation
 ============
-Clone the repository or download the source code
-Navigate to the root directory of the project
-Create a virtual environment: python -m venv env
-Activate the virtual environment: source env/bin/activate (on Unix-based systems) or env\Scripts\activate (on Windows)
-pyenv local 3.11.2
-Install the required packages: pip install -r requirements.txt
+- Clone the repository or download the source code
+- Navigate to the root directory of the project
+- Create a virtual environment: python -m venv env
+- Activate the virtual environment: source env/bin/activate (on Unix-based systems) or env\Scripts\activate (on Windows)
+- pyenv local 3.11.2
+- Install the required packages: pip install -r requirements.txt
 
 Usage
 ============
-Navigate to the root directory of the project
-Activate the virtual environment: source env/bin/activate (on Unix-based systems) or env\Scripts\activate (on Windows)
-To deactivate enter deactivate
-Run the server: uvicorn main:app --reload --host 0.0.0.0
-Access the API endpoints using an HTTP client like curl, Postman or a web browser
+- Navigate to the root directory of the project
+- Activate the virtual environment: source env/bin/activate (on Unix-based systems) or env\Scripts\activate (on Windows)
+- To deactivate enter deactivate
+- Run the server: uvicorn main:app --reload --host 0.0.0.0
+- Access the API endpoints using an HTTP client like curl, Postman or a web browser
 
 API endpoints for the TODO app:
 ================================
