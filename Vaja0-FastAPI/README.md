@@ -32,5 +32,5 @@ API endpoints for the TODO app:
 
 ZAGON DOCKER COMPOSE:
 ================================
-cd v direktorij
-docker-compose up --build
+- cd v direktorij
+- docker-compose up --build
