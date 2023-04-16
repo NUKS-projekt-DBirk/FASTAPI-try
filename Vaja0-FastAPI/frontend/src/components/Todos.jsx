@@ -26,6 +26,27 @@ const TodosContext = React.createContext({
   editTodo: () => {},
 });
 
+function ActiveTasksCounter() {
+  const [activeTasksCount, setActiveTasksCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchActiveTasksCount() {
+      const response = await fetch('http://212.101.137.103:8080/function/active-tasks-counter');
+      const data = await response.json();
+      setActiveTasksCount(data.active_tasks_count);
+    }
+
+    fetchActiveTasksCount();
+  }, []);
+
+  return (
+    <div>
+      <p>Active Tasks Count: {activeTasksCount}</p>
+    </div>
+  );
+}
+
+
 export default function Todos() {
   const [todos, setTodos] = useState([]);
   const [deletedTodos, setDeletedTodos] = useState([]);
@@ -91,6 +112,9 @@ export default function Todos() {
     fetchTodos();
     fetchDeletedTodos();
   }, []);
+
+
+
   return (
     <TodosContext.Provider
       value={{
@@ -106,6 +130,7 @@ export default function Todos() {
         <Text fontSize="2xl" fontWeight="bold" mb={4}>
           To-Do app made by David Birk
         </Text>
+        <ActiveTasksCounter />
         <InputGroup mb={4} maxW="md">
           <Input
             placeholder="Enter new ToDo task"
@@ -130,7 +155,10 @@ export default function Todos() {
                   {todo.task}
                 </Text>
                 <Flex alignItems="center">
-                  <Text fontSize="sm" mr={2}>Created: {moment(todo.created_at).format("MMM DD, YYYY")}</Text>
+                  <Text fontSize="sm" mr={2}>
+                    Created:{" "}
+                    {moment(todo.created_at).format("MMM DD, YYYY")}
+                  </Text>
                   <Flex>
                     <Button
                       onClick={() => {
@@ -177,7 +205,10 @@ export default function Todos() {
                   >
                     <Flex justifyContent="space-between" alignItems="center">
                       <Text textDecoration="line-through">{todo.task}</Text>
-                      <Text fontSize="sm">Deleted: {moment(todo.deleted_at).format("MMM DD, YYYY")}</Text>
+                      <Text fontSize="sm">
+                        Deleted:{" "}
+                        {moment(todo.deleted_at).format("MMM DD, YYYY")}
+                      </Text>
                     </Flex>
                   </Box>
                 ))}

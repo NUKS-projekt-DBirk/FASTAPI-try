@@ -21,7 +21,7 @@ local_tz = timezone('Europe/Belgrade')
 
 
 #origins = ["*"]
-origins = ["http://localhost", "http://localhost:3000", "http://localhost:3000",  "http://localhost:8000", "localhost:3000"]
+origins = ["http://localhost", "http://localhost:3000", "http://localhost:3000",  "http://localhost:8000", "localhost:3000", "http://212.101.137.103:8080"]
 
 
 app.add_middleware(
