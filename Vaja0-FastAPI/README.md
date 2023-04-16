@@ -29,3 +29,8 @@ API endpoints for the TODO app:
 - PUT /change/{id}: Update the task of a TODO item by ID
 - GET /list-deleted: Get the list of deleted TODO items
 - POST /send-email: Send an email with the list of TODO items
+
+ZAGON DOCKER COMPOSE:
+================================
+cd v direktorij
+docker-compose up --build
