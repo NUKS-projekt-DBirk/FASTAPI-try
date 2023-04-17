@@ -26,26 +26,6 @@ const TodosContext = React.createContext({
   editTodo: () => {},
 });
 
-function ActiveTasksCounter() {
-  const [activeTasksCount, setActiveTasksCount] = useState(0);
-
-  useEffect(() => {
-    async function fetchActiveTasksCount() {
-      const response = await fetch('http://212.101.137.103:8080/function/active-tasks-counter');
-      const data = await response.json();
-      setActiveTasksCount(data.active_tasks_count);
-    }
-
-    fetchActiveTasksCount();
-  }, []);
-
-  return (
-    <div>
-      <p>Active Tasks Count: {activeTasksCount}</p>
-    </div>
-  );
-}
-
 
 export default function Todos() {
   const [todos, setTodos] = useState([]);
@@ -54,21 +34,33 @@ export default function Todos() {
   const [newTodo, setNewTodo] = useState("");
   const [editTodo, setEditTodo] = useState(null);
   const [editTodoText, setEditTodoText] = useState("");
+  const [activeTasksCount, setActiveTasksCount] = useState(0);
+
+  const fetchActiveTasksCount = async () => {
+    const response = await fetch('http://212.101.137.103/faas');
+    const data = await response.text();
+    setActiveTasksCount(data);
+  };
+
+  useEffect(() => {
+    fetchActiveTasksCount();
+  }, []);
+
 
   const fetchTodos = async () => {
-    const response = await fetch("http://localhost:8000/v2/list");
+    const response = await fetch("http://212.101.137.103/v2/list");
     const data = await response.json();
     setTodos(data.reverse()); // update todos with the data in reverse order
   };
 
   const fetchDeletedTodos = async () => {
-    const response = await fetch("http://localhost:8000/v2/list-deleted");
+    const response = await fetch("http://212.101.137.103/v2/list-deleted");
     const data = await response.json();
     setDeletedTodos(data.reverse()); // update deletedTodos with the data in reverse order
   };
 
   const addTodo = async () => {
-    await fetch("http://localhost:8000/v2/add", {
+    await fetch("http://212.101.137.103/v2/add", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -79,18 +71,20 @@ export default function Todos() {
     });
     setNewTodo("");
     fetchTodos();
+    setActiveTasksCount((prevCount) => parseInt(prevCount, 10) + 1); // Update active tasks count
   };
 
   const deleteTodo = async (id) => {
-    await fetch(`http://localhost:8000/v2/delete/${id}`, {
+    await fetch(`http://212.101.137.103/v2/delete/${id}`, {
       method: "DELETE",
     });
     fetchTodos();
     fetchDeletedTodos();
+    setActiveTasksCount((prevCount) => parseInt(prevCount, 10) - 1); // Update active tasks count
   };
 
   const editTodoFunc = async (id, newTask) => {
-    await fetch(`http://localhost:8000/v2/change/${id}?new_task=${encodeURIComponent(newTask)}`, {
+    await fetch(`http://212.101.137.103/v2/change/${id}?new_task=${encodeURIComponent(newTask)}`, {
       method: "PUT",
     });
     setEditTodoText("");
@@ -101,7 +95,7 @@ export default function Todos() {
   const sendEmail = async () => {
     const email = prompt("Enter your email address:");
     if (email) {
-      await fetch(`http://localhost:8000/v2/send-email?to_email=${encodeURIComponent(email)}`, {
+      await fetch(`http://212.101.137.103/v2/send-email?to_email=${encodeURIComponent(email)}`, {
         method: "POST",
       });
       alert(`TODO list sent to ${email}`);
@@ -130,7 +124,9 @@ export default function Todos() {
         <Text fontSize="2xl" fontWeight="bold" mb={4}>
           To-Do app made by David Birk
         </Text>
-        <ActiveTasksCounter />
+        <div>
+          <p>Active Tasks Count: {activeTasksCount}</p>
+        </div>
         <InputGroup mb={4} maxW="md">
           <Input
             placeholder="Enter new ToDo task"
