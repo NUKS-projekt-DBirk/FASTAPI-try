@@ -32,5 +32,5 @@ API endpoints for the TODO app:
 
 ZAGON DOCKER COMPOSE:
 ================================
-- cd v direktorij
+- cd v direktorij:  /Projekt/Vaja0-FastAPI
 - docker-compose up --build
