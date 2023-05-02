@@ -12,3 +12,6 @@ Backend Koda: Backend koda za to aplikacijo je zgrajena z uporabo Python in Fast
 Aplikacija uporablja sqlLite bazo podatkov za shranjevanje posameznih opravil. 
 
 Frontend koda: Frontend koda za to aplikacijo je zgrajena z uporabo React.js frameworka. Odgovoren je za ravnanje z vsemi interakcijami na strani odjemalca in renderiranje UI-ja.
+
+APLIKACIJA DELUJE & JE DOSEGLJIVA NA spletnem naslovu: 212.101.137.103
+======================================================================
